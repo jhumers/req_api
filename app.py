@@ -317,7 +317,8 @@ def _parse(full_text, pages, filename):
         },
         'header':  h,
         # 'items':   items,
-        'items':   json.dumps(items),
+        # 'items':   json.dumps(items),
+        'items':   json.dumps(json.dumps(items)),
         'summary': {
             'TotalValue':   total_m.group(1) if total_m else '',
             'TotalItems':   len(items),
