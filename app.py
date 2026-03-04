@@ -4,10 +4,11 @@ Extrae datos de Requisiciones SAP desde PDF en base64.
 Compatible con PDFs de Paraguay, República Dominicana y Perú.
 """
 
-import re, io, base64, logging
+import re, io, base64, logging,json
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
 import pdfplumber
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 log = logging.getLogger(__name__)
@@ -315,7 +316,8 @@ def _parse(full_text, pages, filename):
             'pagesCount':  len(pages),
         },
         'header':  h,
-        'items':   items,
+        # 'items':   items,
+        'items':   json.dumps(items),
         'summary': {
             'TotalValue':   total_m.group(1) if total_m else '',
             'TotalItems':   len(items),
