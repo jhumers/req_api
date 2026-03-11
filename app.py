@@ -8,6 +8,7 @@ import re, io, base64, logging,json
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
 import pdfplumber
+import uuid
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -113,6 +114,7 @@ def _date(text, labels):
     return m.group(0) if m else raw[:12].strip()
 
 
+
 # ─── ITEM PARSING ─────────────────────────────────────────────────────────────
 
 # Formato real de una línea de ítem (basado en PDFs reales de SAP Plan International):
@@ -160,6 +162,20 @@ def _parse_items(text):
         quantity    = m.group(6)
         currency    = m.group(7).upper()
         valuation   = m.group(8)
+
+        # Inicializar variables relacionadas con la cola
+        deliv_date = gl_account = cost_center = wbs = ''
+
+        # Separar fecha pegada a la valoración (caso DOM):
+        # en algunos PDFs la fecha está inmediatamente después del valor
+        # sin espacio: "3.700.000,0011.12.2025". Si detectamos una fecha
+        # dentro de la valoración, la extraemos y limpiamos el valor.
+        date_in_val = re.search(r'(\d{2}\.\d{2}\.\d{4})', valuation)
+        if date_in_val:
+            deliv_date = date_in_val.group(1)
+            valuation = valuation[:date_in_val.start()].rstrip(' ,.')
+        else:
+            valuation = valuation.strip()
 
         # Lo que queda después de la valoración en la misma línea
         tail = line[m.end():].strip()
