@@ -125,7 +125,8 @@ Content-Type: application/json
       "DeliveryDate":              "06.02.2026",
       "GLAccount":                 "666070",
       "CostCenter":                "PRJPY4047",
-      "WBSElement":                "PY02160-4047-038-2711-01"
+      "WBSElement":                "PY02160-4047-038-2711-01",
+      "ItemText":                  "Texto libre del bloque ITEM TEXT (México)"
     }
   ],
   "summary": {

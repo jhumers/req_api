@@ -123,6 +123,7 @@ def _date(text, labels):
 #  Perú:      00010 K  1037   AWS - Server RIE  C/U 1.000 USD  494.33 25.07.2025 668050 SPCPE6084
 #  Rep.Dom:   00010 P  03030  Contratación Agencia DI C/U 1,000 DOP 3.700.000,0011.12.2025 641090 FNDDODO DO04427-...
 #                                                                              ↑ sin espacio entre valoración y fecha (DOM)
+#  México:    00010 P  03012  Monitoreo Post   C/U 1.000 MXN 6,500.00 09.01.2026 641030 PRJMX6154 MX00016-...
 
 ITEM_RE = re.compile(
     r'^\s*'
@@ -132,7 +133,7 @@ ITEM_RE = re.compile(
     r'(.*?)\s+'                                             # Desc       texto variable
     r'(C/U|EA|C/S|KG|LT|MT|UN|HRS?|DÍAS?|M2|ML)\s+'        # Unit       C/U, EA…
     r'([\d.,]+)\s+'                                         # Quantity   450.000
-    r'(DOP|PYG|USD|EUR|PEN|CLP|GBP|COP|BOB|UYU)\s*'        # Currency   PYG, DOP… (espacio opcional → DOM)
+    r'(DOP|PYG|USD|EUR|PEN|CLP|GBP|COP|BOB|UYU|MXN)\s*'    # Currency   PYG, DOP, MXN… (espacio opcional → DOM)
     r'([\d.,]+)',                                           # Valuation  1,012,500
     re.IGNORECASE
 )
@@ -145,6 +146,8 @@ TAIL_RE = re.compile(
     r'(?:\s+(\S+))?'                # WBSElement (opcional)
 )
 
+ITEM_TEXT_RE = re.compile(r'^\s*ITEM TEXT:\s*(.*)$', re.IGNORECASE)
+
 def _parse_items(text):
     items = []
     lines = text.split('\n')
@@ -152,6 +155,11 @@ def _parse_items(text):
     for i, line in enumerate(lines):
         m = ITEM_RE.match(line)
         if not m:
+            # El bloque "ITEM TEXT:" pertenece al último ítem leído. Puede
+            # aparecer tras un salto de página/encabezado antes del siguiente ítem.
+            it = ITEM_TEXT_RE.match(line)
+            if it and items:
+                items[-1]['ItemText'] = it.group(1).strip()
             continue
 
         sn          = m.group(1)
@@ -277,6 +285,7 @@ def _parse_items(text):
             'GLAccount':                 gl_account,
             'CostCenter':                cost_center,
             'WBSElement':                wbs,
+            'ItemText':                  '',
         })
 
     return items
@@ -309,17 +318,19 @@ def _get_observations(full_text):
 
 
 def _parse(full_text, pages, filename):
+    # La cabecera se repite en cada página; leerla solo de la primera.
+    header_text = pages[0] if pages else full_text
     h = {
-        'PurchaseOrganisation':    _field(full_text, ['Purchase Organisation', 'Purchase Organization']),
-        'PurchaseGroup':           _field(full_text, ['Purchase Group']),
-        'RequisitionNumber':       _field(full_text, ['Requisition #', 'Requisition#'], 20),
-        'PreparedBy':              _field(full_text, ['Prepared/Submitted By', 'Prepared By']),
-        'ApprovedBy':              _field(full_text, ['Approved By']),
-        'RequisitionCreationDate': _date(full_text,  ['Requisition Creation Date']),
-        'RequisitionApprovalDate': _date(full_text,  ['Requisition Approval Date']),
-        'RunDate':                 _date(full_text,  ['Run Date']),
-        'PrintedBy':               _field(full_text, ['Printed By'], 40),
-        'REQDescription':          _field(full_text, ['REQ Description :', 'REQ Description:'], 500),
+        'PurchaseOrganisation':    _field(header_text, ['Purchase Organisation', 'Purchase Organization']),
+        'PurchaseGroup':           _field(header_text, ['Purchase Group']),
+        'RequisitionNumber':       _field(header_text, ['Requisition #', 'Requisition#'], 20),
+        'PreparedBy':              _field(header_text, ['Prepared/Submitted By', 'Prepared By']),
+        'ApprovedBy':              _field(header_text, ['Approved By']),
+        'RequisitionCreationDate': _date(header_text,  ['Requisition Creation Date']),
+        'RequisitionApprovalDate': _date(header_text,  ['Requisition Approval Date']),
+        'RunDate':                 _date(header_text,  ['Run Date']),
+        'PrintedBy':               _field(header_text, ['Printed By'], 40),
+        'REQDescription':          _field(header_text, ['REQ Description :', 'REQ Description:'], 500),
     }
     items = _parse_items(full_text)
     total_m = re.search(r'Total\s+Value\s*:?\s*\n?\s*([\d.,]+)', full_text, re.IGNORECASE)
