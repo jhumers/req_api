@@ -131,7 +131,7 @@ ITEM_RE = re.compile(
     r'([A-Z])\s+'                                           # AcctCat    P / K
     r'(\d+)\s+'                                             # MatGroup   1038
     r'(.*?)\s+'                                             # Desc       texto variable
-    r'(C/U|EA|C/S|KG|LT|MT|UN|HRS?|DÍAS?|M2|ML)\s+'        # Unit       C/U, EA…
+    r'(C/U|EA|C/S|KG|LT|MT|UN|HRS?|DÍAS?|M2|ML|UP|D)\s+'   # Unit       C/U, EA, UP, D…
     r'([\d.,]+)\s+'                                         # Quantity   450.000
     r'(DOP|PYG|USD|EUR|PEN|CLP|GBP|COP|BOB|UYU|MXN)\s*'    # Currency   PYG, DOP, MXN… (espacio opcional → DOM)
     r'([\d.,]+)',                                           # Valuation  1,012,500
