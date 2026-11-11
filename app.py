@@ -1,7 +1,8 @@
 """
 REQ Extractor API — Plan International
 Extrae datos de Requisiciones SAP desde PDF en base64.
-Compatible con PDFs de Paraguay, República Dominicana y Perú.
+Compatible con PDFs de Paraguay, República Dominicana, Perú y demás países
+de Latinoamérica (ARS, BRL, CLP, COP, CRC, CUP, GTQ, HNL, MXN, NIO, UYU, VES).
 """
 
 import re, io, base64, logging,json
@@ -133,7 +134,7 @@ ITEM_RE = re.compile(
     r'(.*?)\s+'                                             # Desc       texto variable
     r'(C/U|EA|C/S|KG|LT|MT|UN|HRS?|DÍAS?|M2|ML|UP|D)\s+'   # Unit       C/U, EA, UP, D…
     r'([\d.,]+)\s+'                                         # Quantity   450.000
-    r'(DOP|PYG|USD|EUR|PEN|CLP|GBP|COP|BOB|UYU|MXN)\s*'    # Currency   PYG, DOP, MXN… (espacio opcional → DOM)
+    r'(ARS|BRL|CLP|COP|CRC|CUP|DOP|GTQ|HNL|MXN|NIO|PYG|USD|EUR|PEN|UYU|VES|GBP|BOB)\s*'  # Currency (espacio opcional → DOM)
     r'([\d.,]+)',                                           # Valuation  1,012,500
     re.IGNORECASE
 )
